@@ -119,6 +119,7 @@ Receiver.propTypes = {
   onFileDrop: PropTypes.func.isRequired,
   wrapperId: PropTypes.string,
   style: PropTypes.object,
+  wrapperId: PropTypes.string,
 };
 
 export default Receiver;
