@@ -7,9 +7,11 @@
     "clean": "rm -rf lib",
     "test": "jest",
     "test:report": "jest --coverage",
-    "build:lib": "babel src --out-dir lib",
+    "build:lib": "babel src --out-dir lib --ignore src/__tests__",
     "build": "npm run eslint && npm run test && npm run clean && npm run build:lib",
-    "eslint": "eslint ./src/*.js ./src/**/*.js"
+    "eslint": "eslint ./src/*.js ./src/**/*.js",
+    "prepublish": "npm run build",
+    "postinstall": "npm run build:lib"
   },
   "repository": {
     "type": "git",
