@@ -11,7 +11,7 @@
     "build": "npm run eslint && npm run test && npm run clean && npm run build:lib",
     "eslint": "eslint ./src/*.js ./src/**/*.js",
     "prepublish": "npm run build",
-    "postinstall": "npm run build:lib"
+    "postinstall": "postinstall-build lib --script build:lib"
   },
   "repository": {
     "type": "git",
@@ -50,6 +50,13 @@
     "react-addons-test-utils": "^0.14.8 || ^15.0.0",
     "react-dom": "^0.14.8 || ^15.0.0"
   },
+  "buildDependencies": [
+    "babel",
+    "babel-cli",
+    "babel-preset-es2015",
+    "babel-preset-react",
+    "babel-preset-stage-0"
+  ],
   "peerDependencies": {
     "react": "^0.14.8 || ^15.0.0"
   },

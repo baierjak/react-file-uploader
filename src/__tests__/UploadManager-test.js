@@ -27,7 +27,7 @@ describe('UploadManager', () => {
   let instance;
   let container;
 
-  beforeEach(function setting() {
+  beforeEach(() => {
     global.document = jsdom();
     global.window = document.parentWindow;
 
@@ -46,19 +46,19 @@ describe('UploadManager', () => {
     );
   });
 
-  afterEach(function setting() {
+  afterEach(() => {
     container = null;
     instance = null;
   });
 
   describe('#render()', () => {
-    it('should render ul element by default', function test() {
+    it('should render ul element by default', () => {
       const node = ReactDOM.findDOMNode(instance);
       expect(node).toEqual(jasmine.any(HTMLUListElement));
       expect(node.firstElementChild).toEqual(jasmine.any(HTMLParagraphElement));
     });
 
-    it('should render wrapper element according to component props', function test() {
+    it('should render wrapper element according to component props', () => {
       instance = ReactDOM.render(
         <UploadManager
           component="div"
@@ -73,7 +73,7 @@ describe('UploadManager', () => {
       expect(node).toEqual(jasmine.any(HTMLDivElement));
     });
 
-    it('should render a wrapper with customClass in string', function test() {
+    it('should render a wrapper with customClass in string', () => {
       instance = ReactDOM.render(
         <UploadManager
           component="div"
@@ -90,7 +90,7 @@ describe('UploadManager', () => {
       expect(node.className).toEqual(stringClass);
     });
 
-    it('should render a wrapper with customClass in array', function test() {
+    it('should render a wrapper with customClass in array', () => {
       instance = ReactDOM.render(
         <UploadManager
           component="div"
@@ -114,23 +114,23 @@ describe('UploadManager', () => {
     const successResponse = { body: { success: true } };
     let errorHandler;
 
-    beforeEach(function setting() {
+    beforeEach(() => {
       errorHandler = instance.props.uploadErrorHandler;
     });
 
-    it('should return an object contains key of `error` and `result`', function test() {
+    it('should return an object contains key of `error` and `result`', () => {
       const result = errorHandler(null, successResponse);
       expect(result.error).toBeNull();
       expect(result.result).toEqual(successResponse.body);
     });
 
-    it('should return an object with key of `error` with value equals to the first argument if it is not empty', function test() {
+    it('should return an object with key of `error` with value equals to the first argument if it is not empty', () => {
       const result = errorHandler(err, successResponse);
       expect(result.error).toEqual(err.message);
       expect(result.result).toEqual(successResponse.body);
     });
 
-    it('should return an object with key of `error` with value equals to the value of `body.error` of the second argument if it is not empty', function test() {
+    it('should return an object with key of `error` with value equals to the value of `body.error` of the second argument if it is not empty', () => {
       const result = errorHandler(null, errorResponse);
       expect(result.error).toEqual(errorResponse.body.errors);
       delete errorResponse.body.errors;
@@ -141,7 +141,7 @@ describe('UploadManager', () => {
   describe('#upload()', () => {
     let successResponse;
 
-    beforeEach(function setting() {
+    beforeEach(() => {
       nock('http://localhost:3000')
         .filteringRequestBody(() => '*')
         .post('/api/upload', '*')
@@ -166,7 +166,7 @@ describe('UploadManager', () => {
       nock.enableNetConnect();
     });
 
-    it('should call onUploadStart prop functions if it is given', function test() {
+    it('should call onUploadStart prop functions if it is given', () => {
       instance.upload(instance.props.uploadUrl, {});
       expect(onUploadStart).toBeCalledWith({ status: uploadStatus.UPLOADING });
     });

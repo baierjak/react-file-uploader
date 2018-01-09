@@ -67,7 +67,7 @@ describe('Receiver', () => {
   let onDragLeave;
   let onFileDrop;
 
-  beforeEach(function setting() {
+  beforeEach(() => {
     global.document = jsdom();
     global.window = document.parentWindow;
 
@@ -95,7 +95,7 @@ describe('Receiver', () => {
   });
 
   describe('state of dragLevel', () => {
-    beforeEach(function setting() {
+    beforeEach(() => {
       const onDragEnterFn = jest.genMockFn();
       const onDragOverFn = jest.genMockFn();
       const onDragLeaveFn = jest.genMockFn();
@@ -116,35 +116,35 @@ describe('Receiver', () => {
       receiver = instance.refs.receiver;
     });
 
-    it('should increase state of dragLevel by 1 with dragEnter event', function test() {
+    it('should increase state of dragLevel by 1 with dragEnter event', () => {
       const oldDragLevel = receiver.state.dragLevel;
       window.dispatchEvent(dragEnterEvent);
       const newDragLevel = receiver.state.dragLevel;
       expect(newDragLevel).toEqual(oldDragLevel + 1);
     });
 
-    it('should call onDragEnter with dragEnter event if isOpen is false', function test() {
+    it('should call onDragEnter with dragEnter event if isOpen is false', () => {
       window.dispatchEvent(dragEnterEvent);
       expect(onDragEnter).toBeCalled();
     });
 
-    it('should not call onDragEnter with dragEnter event if isOpen is true', function test() {
+    it('should not call onDragEnter with dragEnter event if isOpen is true', () => {
       instance.setState({ isOpen: true });
       window.dispatchEvent(dragEnterEvent);
       expect(onDragEnter).not.toBeCalled();
     });
 
-    it('should call event.preventDefault with dragOver event', function test() {
+    it('should call event.preventDefault with dragOver event', () => {
       window.dispatchEvent(dragOverEvent);
       expect(dragOverEvent.preventDefault).toBeCalled();
     });
 
-    it('should call onDragOver with dragOver event', function test() {
+    it('should call onDragOver with dragOver event', () => {
       window.dispatchEvent(dragOverEvent);
       expect(onDragOver).toBeCalled();
     });
 
-    it('should decrease state of dragLevel by 1 with dragLeave event', function test() {
+    it('should decrease state of dragLevel by 1 with dragLeave event', () => {
       const oldDragLevel = receiver.state.dragLevel;
       window.dispatchEvent(dragEnterEvent);
       const newDragLevel = receiver.state.dragLevel;
@@ -156,7 +156,7 @@ describe('Receiver', () => {
       expect(onDragLeave).toBeCalled();
     });
 
-    it('should call onDragLeave if state of dragLevel is not 0', function test() {
+    it('should call onDragLeave if state of dragLevel is not 0', () => {
       const oldDragLevel = receiver.state.dragLevel;
       window.dispatchEvent(dragEnterEvent);
       const newDragLevel = receiver.state.dragLevel;
@@ -177,18 +177,18 @@ describe('Receiver', () => {
       expect(onDragLeave).toBeCalled();
     });
 
-    it('should call event.preventDefault with drop event', function test() {
+    it('should call event.preventDefault with drop event', () => {
       window.dispatchEvent(dropEvent);
       // eslint-disable-next-line no-undef
       expect(dropEvent.preventDefault).toBeCalled();
     });
 
-    it('should call onFileDrop with drop event', function test() {
+    it('should call onFileDrop with drop event', () => {
       window.dispatchEvent(dropEvent);
       expect(onFileDrop).toBeCalled();
     });
 
-    it('should set state of dragLevel to 0 with dragEnter event', function test() {
+    it('should set state of dragLevel to 0 with dragEnter event', () => {
       const oldDragLevel = receiver.state.dragLevel;
       window.dispatchEvent(dragEnterEvent);
       const newDragLevel = receiver.state.dragLevel;
@@ -199,7 +199,7 @@ describe('Receiver', () => {
       expect(finalDragLevel).toEqual(0);
     });
 
-    it('should not call any callback after Receiver did unmount', function test() {
+    it('should not call any callback after Receiver did unmount', () => {
       ReactDOM.unmountComponentAtNode(container);
       window.dispatchEvent(dragEnterEvent);
       expect(onDragEnter).not.toBeCalled();
@@ -216,7 +216,7 @@ describe('Receiver', () => {
   });
 
   describe('callbacks and callback arguments', () => {
-    beforeEach(function setting() {
+    beforeEach(() => {
       const onDragEnterFn = (e) => {
         expect(e.type).toBe('dragenter');
       };
@@ -255,51 +255,50 @@ describe('Receiver', () => {
       receiver = instance.refs.receiver;
     });
 
-    it('should execute the onDragEnter callback with a DragEvent with type `dragenter` as argument', function test() {
+    it('should execute the onDragEnter callback with a DragEvent with type `dragenter` as argument', () => {
       window.dispatchEvent(dragEnterEvent);
     });
 
-    it('should execute the onDragOver callback with a DragEvent with type `dragover` as argument', function test() {
+    it('should execute the onDragOver callback with a DragEvent with type `dragover` as argument', () => {
       window.dispatchEvent(dragOverEvent);
     });
 
-    it('should execute the onDragLeave callback with a DragEvent with type `dragleave` as argument', function test() {
+    it('should execute the onDragLeave callback with a DragEvent with type `dragleave` as argument', () => {
       window.dispatchEvent(dragLeaveEvent);
     });
 
-    it('should execute the onFileDrop callback with a DragEvent with type `drop` as argument', function test() {
+    it('should execute the onFileDrop callback with a DragEvent with type `drop` as argument', () => {
       window.dispatchEvent(dropEvent);
     });
   });
 
   describe('#render', () => {
-    beforeEach(function setting() {
+    beforeEach(() => {
       const Component = createComponent();
       const template = createTemplate({ isOpen: false, files: [] }, {}, Component);
 
       createTestParent = React.createFactory(template);
       ParentComponent = createTestParent();
       container = document.createElement('div');
-      //document.body.appendChild(container);
 
       instance = ReactDOM.render(ParentComponent, container);
       receiver = instance.refs.receiver;
     });
 
-    it('should render nothing if isOpen is false', function test() {
+    it('should render nothing if isOpen is false', () => {
       const receiverNode = ReactDOM.findDOMNode(receiver);
       expect(receiverNode).toBeNull();
       instance.setState({ isOpen: true });
     });
 
-    it('should render a div wrapper with children if isOpen is true', function test() {
+    it('should render a div wrapper with children if isOpen is true', () => {
       instance.setState({ isOpen: true });
       const receiverNode = ReactDOM.findDOMNode(receiver);
       expect(receiverNode).toEqual(jasmine.any(HTMLDivElement));
       expect(receiverNode.firstElementChild).toEqual(jasmine.any(HTMLHeadingElement));
     });
 
-    it('should render a div wrapper with customClass in string', function test() {
+    it('should render a div wrapper with customClass in string', () => {
       const Component = createComponent();
       const template = createTemplate({ isOpen: true, files: [] }, { customClass: stringClass }, Component);
 
@@ -313,7 +312,7 @@ describe('Receiver', () => {
       expect(receiverNode.className).toEqual(stringClass);
     });
 
-    it('should render a div wrapper with customClass in array', function test() {
+    it('should render a div wrapper with customClass in array', () => {
       const Component = createComponent();
       const template = createTemplate({ isOpen: true, files: [] }, { customClass: arrayClass }, Component);
 
