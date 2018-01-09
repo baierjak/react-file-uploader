@@ -54,8 +54,7 @@
     "react": "^0.14.8 || ^15.0.0"
   },
   "jest": {
-    "scriptPreprocessor": "<rootDir>/node_modules/babel-jest",
-    "testPathDirs": [
+    "roots": [
       "<rootDir>/src"
     ],
     "unmockedModulePathPatterns": [

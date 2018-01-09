@@ -39,18 +39,42 @@ const createTemplate = (initialState, props, Component) => React.createClass({
 });
 
 describe('Receiver', () => {
+  const stringClass = 'receiver';
+  const arrayClass = ['react', 'receiver'];
+
+  const dragEnterEvent = document.createEvent('HTMLEvents');
+  const dragOverEvent = document.createEvent('HTMLEvents');
+  const dragLeaveEvent = document.createEvent('HTMLEvents');
+  const dropEvent = document.createEvent('HTMLEvents');
+
+  const testFile = {
+    lastModified: 1465229147840,
+    lastModifiedDate: 'Tue Jun 07 2016 00:05:47 GMT+0800 (HKT)',
+    name: 'test.jpg',
+    size: 1024,
+    type: 'image/jpg',
+    webkitRelativePath: '',
+  };
+
+  let container;
+  let instance;
+  let receiver;
+  let ParentComponent;
+  let createTestParent;
+
+  let onDragEnter;
+  let onDragOver;
+  let onDragLeave;
+  let onFileDrop;
+
   beforeEach(function setting() {
     global.document = jsdom();
     global.window = document.parentWindow;
 
-    const testFile = {
-      lastModified: 1465229147840,
-      lastModifiedDate: 'Tue Jun 07 2016 00:05:47 GMT+0800 (HKT)',
-      name: 'test.jpg',
-      size: 1024,
-      type: 'image/jpg',
-      webkitRelativePath: '',
-    };
+    // mockup environment
+    window.DragEvent = jest.fn();
+    window.DataTransfer = jest.fn();
+
     const files = [testFile];
 
     const mockDT = {
@@ -58,158 +82,151 @@ describe('Receiver', () => {
       setData: jest.genMockFunction(),
     };
 
-    this.stringClass = 'receiver';
-    this.arrayClass = ['react', 'receiver'];
+    dragEnterEvent.initEvent('dragenter', false, true);
 
-    this.dragEnterEvent = document.createEvent('HTMLEvents');
-    this.dragEnterEvent.initEvent('dragenter', false, true);
+    dragOverEvent.initEvent('dragover', false, true);
+    dragOverEvent.preventDefault = jest.genMockFn();
 
-    this.dragOverEvent = document.createEvent('HTMLEvents');
-    this.dragOverEvent.initEvent('dragover', false, true);
-    this.dragOverEvent.preventDefault = jest.genMockFn();
+    dragLeaveEvent.initEvent('dragleave', false, true);
 
-    this.dragLeaveEvent = document.createEvent('HTMLEvents');
-    this.dragLeaveEvent.initEvent('dragleave', false, true);
-
-    this.dropEvent = document.createEvent('HTMLEvents');
-    this.dropEvent.initEvent('drop', false, true);
-    this.dropEvent.preventDefault = jest.genMockFn();
-    this.dropEvent.dataTransfer = mockDT;
+    dropEvent.initEvent('drop', false, true);
+    dropEvent.preventDefault = jest.genMockFn();
+    dropEvent.dataTransfer = mockDT;
   });
 
   describe('state of dragLevel', () => {
     beforeEach(function setting() {
-      const onDragEnter = jest.genMockFn();
-      const onDragOver = jest.genMockFn();
-      const onDragLeave = jest.genMockFn();
-      const onFileDrop = jest.genMockFn();
+      const onDragEnterFn = jest.genMockFn();
+      const onDragOverFn = jest.genMockFn();
+      const onDragLeaveFn = jest.genMockFn();
+      const onFileDropFn = jest.genMockFn();
 
-      this.onDragEnter = onDragEnter;
-      this.onDragOver = onDragOver;
-      this.onDragLeave = onDragLeave;
-      this.onFileDrop = onFileDrop;
+      onDragEnter = onDragEnterFn;
+      onDragOver = onDragOverFn;
+      onDragLeave = onDragLeaveFn;
+      onFileDrop = onFileDropFn;
 
-      const Component = createComponent(onDragEnter, onDragOver, onDragLeave, onFileDrop);
+      const Component = createComponent(onDragEnterFn, onDragOverFn, onDragLeaveFn, onFileDropFn);
       const template = createTemplate({ isOpen: false, files: [] }, {}, Component);
 
-      this.createTestParent = React.createFactory(template);
-      this.ParentComponent = this.createTestParent();
-      this.container = document.createElement('div');
-      this.instance = ReactDOM.render(this.ParentComponent, this.container);
-      this.receiver = this.instance.refs.receiver;
+      createTestParent = React.createFactory(template);
+      ParentComponent = createTestParent();
+      container = document.createElement('div');
+      instance = ReactDOM.render(ParentComponent, container);
+      receiver = instance.refs.receiver;
     });
 
     it('should increase state of dragLevel by 1 with dragEnter event', function test() {
-      const oldDragLevel = this.receiver.state.dragLevel;
-      window.dispatchEvent(this.dragEnterEvent);
-      const newDragLevel = this.receiver.state.dragLevel;
+      const oldDragLevel = receiver.state.dragLevel;
+      window.dispatchEvent(dragEnterEvent);
+      const newDragLevel = receiver.state.dragLevel;
       expect(newDragLevel).toEqual(oldDragLevel + 1);
     });
 
     it('should call onDragEnter with dragEnter event if isOpen is false', function test() {
-      window.dispatchEvent(this.dragEnterEvent);
-      expect(this.onDragEnter).toBeCalled();
+      window.dispatchEvent(dragEnterEvent);
+      expect(onDragEnter).toBeCalled();
     });
 
     it('should not call onDragEnter with dragEnter event if isOpen is true', function test() {
-      this.instance.setState({ isOpen: true });
-      window.dispatchEvent(this.dragEnterEvent);
-      expect(this.onDragEnter).not.toBeCalled();
+      instance.setState({ isOpen: true });
+      window.dispatchEvent(dragEnterEvent);
+      expect(onDragEnter).not.toBeCalled();
     });
 
     it('should call event.preventDefault with dragOver event', function test() {
-      window.dispatchEvent(this.dragOverEvent);
-      expect(this.dragOverEvent.preventDefault).toBeCalled();
+      window.dispatchEvent(dragOverEvent);
+      expect(dragOverEvent.preventDefault).toBeCalled();
     });
 
     it('should call onDragOver with dragOver event', function test() {
-      window.dispatchEvent(this.dragOverEvent);
-      expect(this.onDragOver).toBeCalled();
+      window.dispatchEvent(dragOverEvent);
+      expect(onDragOver).toBeCalled();
     });
 
     it('should decrease state of dragLevel by 1 with dragLeave event', function test() {
-      const oldDragLevel = this.receiver.state.dragLevel;
-      window.dispatchEvent(this.dragEnterEvent);
-      const newDragLevel = this.receiver.state.dragLevel;
+      const oldDragLevel = receiver.state.dragLevel;
+      window.dispatchEvent(dragEnterEvent);
+      const newDragLevel = receiver.state.dragLevel;
       expect(newDragLevel).toEqual(oldDragLevel + 1);
 
-      window.dispatchEvent(this.dragLeaveEvent);
-      const finalDragLevel = this.receiver.state.dragLevel;
+      window.dispatchEvent(dragLeaveEvent);
+      const finalDragLevel = receiver.state.dragLevel;
       expect(finalDragLevel).toEqual(newDragLevel - 1);
-      expect(this.onDragLeave).toBeCalled();
+      expect(onDragLeave).toBeCalled();
     });
 
     it('should call onDragLeave if state of dragLevel is not 0', function test() {
-      const oldDragLevel = this.receiver.state.dragLevel;
-      window.dispatchEvent(this.dragEnterEvent);
-      const newDragLevel = this.receiver.state.dragLevel;
+      const oldDragLevel = receiver.state.dragLevel;
+      window.dispatchEvent(dragEnterEvent);
+      const newDragLevel = receiver.state.dragLevel;
       expect(newDragLevel).toEqual(oldDragLevel + 1);
 
-      window.dispatchEvent(this.dragEnterEvent);
-      const newerDragLevel = this.receiver.state.dragLevel;
+      window.dispatchEvent(dragEnterEvent);
+      const newerDragLevel = receiver.state.dragLevel;
       expect(newerDragLevel).toEqual(newDragLevel + 1);
 
-      window.dispatchEvent(this.dragLeaveEvent);
-      const finalDragLevel = this.receiver.state.dragLevel;
+      window.dispatchEvent(dragLeaveEvent);
+      const finalDragLevel = receiver.state.dragLevel;
       expect(finalDragLevel).toEqual(newerDragLevel - 1);
-      expect(this.onDragLeave).not.toBeCalled();
+      expect(onDragLeave).not.toBeCalled();
 
-      window.dispatchEvent(this.dragLeaveEvent);
-      const endDragLevel = this.receiver.state.dragLevel;
+      window.dispatchEvent(dragLeaveEvent);
+      const endDragLevel = receiver.state.dragLevel;
       expect(endDragLevel).toEqual(finalDragLevel - 1);
-      expect(this.onDragLeave).toBeCalled();
+      expect(onDragLeave).toBeCalled();
     });
 
     it('should call event.preventDefault with drop event', function test() {
-      window.dispatchEvent(this.dropEvent);
+      window.dispatchEvent(dropEvent);
       // eslint-disable-next-line no-undef
-      expect(this.dropEvent.preventDefault).toBeCalled();
+      expect(dropEvent.preventDefault).toBeCalled();
     });
 
     it('should call onFileDrop with drop event', function test() {
-      window.dispatchEvent(this.dropEvent);
-      expect(this.onFileDrop).toBeCalled();
+      window.dispatchEvent(dropEvent);
+      expect(onFileDrop).toBeCalled();
     });
 
     it('should set state of dragLevel to 0 with dragEnter event', function test() {
-      const oldDragLevel = this.receiver.state.dragLevel;
-      window.dispatchEvent(this.dragEnterEvent);
-      const newDragLevel = this.receiver.state.dragLevel;
+      const oldDragLevel = receiver.state.dragLevel;
+      window.dispatchEvent(dragEnterEvent);
+      const newDragLevel = receiver.state.dragLevel;
       expect(newDragLevel).toEqual(oldDragLevel + 1);
 
-      window.dispatchEvent(this.dropEvent);
-      const finalDragLevel = this.receiver.state.dragLevel;
+      window.dispatchEvent(dropEvent);
+      const finalDragLevel = receiver.state.dragLevel;
       expect(finalDragLevel).toEqual(0);
     });
 
     it('should not call any callback after Receiver did unmount', function test() {
-      ReactDOM.unmountComponentAtNode(this.container);
-      window.dispatchEvent(this.dragEnterEvent);
-      expect(this.onDragEnter).not.toBeCalled();
+      ReactDOM.unmountComponentAtNode(container);
+      window.dispatchEvent(dragEnterEvent);
+      expect(onDragEnter).not.toBeCalled();
 
-      window.dispatchEvent(this.dragOverEvent);
-      expect(this.onDragOver).not.toBeCalled();
+      window.dispatchEvent(dragOverEvent);
+      expect(onDragOver).not.toBeCalled();
 
-      window.dispatchEvent(this.dragLeaveEvent);
-      expect(this.onDragLeave).not.toBeCalled();
+      window.dispatchEvent(dragLeaveEvent);
+      expect(onDragLeave).not.toBeCalled();
 
-      window.dispatchEvent(this.dropEvent);
-      expect(this.onFileDrop).not.toBeCalled();
+      window.dispatchEvent(dropEvent);
+      expect(onFileDrop).not.toBeCalled();
     });
   });
 
   describe('callbacks and callback arguments', () => {
     beforeEach(function setting() {
-      const onDragEnter = (e) => {
+      const onDragEnterFn = (e) => {
         expect(e.type).toBe('dragenter');
       };
-      const onDragOver = (e) => {
+      const onDragOverFn = (e) => {
         expect(e.type).toBe('dragover');
       };
-      const onDragLeave = (e) => {
+      const onDragLeaveFn = (e) => {
         expect(e.type).toBe('dragleave');
       };
-      const onFileDrop = (e, _files) => {
+      const onFileDropFn = (e, _files) => {
         expect(e.type).toBe('drop');
         const file = _files[0];
         expect(file.lastModified).toBe(testFile.lastModified);
@@ -223,35 +240,35 @@ describe('Receiver', () => {
         expect(file.src).toBe(null);
       };
 
-      this.onDragEnter = onDragEnter;
-      this.onDragOver = onDragOver;
-      this.onDragLeave = onDragLeave;
-      this.onFileDrop = onFileDrop;
+      onDragEnter = onDragEnterFn;
+      onDragOver = onDragOverFn;
+      onDragLeave = onDragLeaveFn;
+      onFileDrop = onFileDropFn;
 
-      const Component = createComponent(onDragEnter, onDragOver, onDragLeave, onFileDrop);
+      const Component = createComponent(onDragEnterFn, onDragOverFn, onDragLeaveFn, onFileDropFn);
       const template = createTemplate({ isOpen: false, files: [] }, {}, Component);
 
-      this.createTestParent = React.createFactory(template);
-      this.ParentComponent = this.createTestParent();
-      this.container = document.createElement('div');
-      this.instance = ReactDOM.render(this.ParentComponent, this.container);
-      this.receiver = this.instance.refs.receiver;
+      createTestParent = React.createFactory(template);
+      ParentComponent = createTestParent();
+      container = document.createElement('div');
+      instance = ReactDOM.render(ParentComponent, container);
+      receiver = instance.refs.receiver;
     });
 
     it('should execute the onDragEnter callback with a DragEvent with type `dragenter` as argument', function test() {
-      window.dispatchEvent(this.dragEnterEvent);
+      window.dispatchEvent(dragEnterEvent);
     });
 
     it('should execute the onDragOver callback with a DragEvent with type `dragover` as argument', function test() {
-      window.dispatchEvent(this.dragOverEvent);
+      window.dispatchEvent(dragOverEvent);
     });
 
     it('should execute the onDragLeave callback with a DragEvent with type `dragleave` as argument', function test() {
-      window.dispatchEvent(this.dragLeaveEvent);
+      window.dispatchEvent(dragLeaveEvent);
     });
 
     it('should execute the onFileDrop callback with a DragEvent with type `drop` as argument', function test() {
-      window.dispatchEvent(this.dropEvent);
+      window.dispatchEvent(dropEvent);
     });
   });
 
@@ -260,52 +277,54 @@ describe('Receiver', () => {
       const Component = createComponent();
       const template = createTemplate({ isOpen: false, files: [] }, {}, Component);
 
-      this.createTestParent = React.createFactory(template);
-      this.ParentComponent = this.createTestParent();
-      this.container = document.createElement('div');
-      this.instance = ReactDOM.render(this.ParentComponent, this.container);
-      this.receiver = this.instance.refs.receiver;
+      createTestParent = React.createFactory(template);
+      ParentComponent = createTestParent();
+      container = document.createElement('div');
+      //document.body.appendChild(container);
+
+      instance = ReactDOM.render(ParentComponent, container);
+      receiver = instance.refs.receiver;
     });
 
     it('should render nothing if isOpen is false', function test() {
-      const receiver = ReactDOM.findDOMNode(this.receiver);
-      expect(receiver).toBeNull();
-      this.instance.setState({ isOpen: true });
+      const receiverNode = ReactDOM.findDOMNode(receiver);
+      expect(receiverNode).toBeNull();
+      instance.setState({ isOpen: true });
     });
 
     it('should render a div wrapper with children if isOpen is true', function test() {
-      this.instance.setState({ isOpen: true });
-      const receiver = ReactDOM.findDOMNode(this.receiver);
-      expect(receiver).toEqual(jasmine.any(HTMLDivElement));
-      expect(receiver.firstElementChild).toEqual(jasmine.any(HTMLHeadingElement));
+      instance.setState({ isOpen: true });
+      const receiverNode = ReactDOM.findDOMNode(receiver);
+      expect(receiverNode).toEqual(jasmine.any(HTMLDivElement));
+      expect(receiverNode.firstElementChild).toEqual(jasmine.any(HTMLHeadingElement));
     });
 
     it('should render a div wrapper with customClass in string', function test() {
       const Component = createComponent();
-      const template = createTemplate({ isOpen: true, files: [] }, { customClass: this.stringClass }, Component);
+      const template = createTemplate({ isOpen: true, files: [] }, { customClass: stringClass }, Component);
 
-      this.createTestParent = React.createFactory(template);
-      this.ParentComponent = this.createTestParent();
-      this.container = document.createElement('div');
-      this.instance = ReactDOM.render(this.ParentComponent, this.container);
-      this.receiver = this.instance.refs.receiver;
+      createTestParent = React.createFactory(template);
+      ParentComponent = createTestParent();
+      container = document.createElement('div');
+      instance = ReactDOM.render(ParentComponent, container);
+      receiver = instance.refs.receiver;
 
-      const receiver = ReactDOM.findDOMNode(this.receiver);
-      expect(receiver.className).toEqual(this.stringClass);
+      const receiverNode = ReactDOM.findDOMNode(receiver);
+      expect(receiverNode.className).toEqual(stringClass);
     });
 
     it('should render a div wrapper with customClass in array', function test() {
       const Component = createComponent();
-      const template = createTemplate({ isOpen: true, files: [] }, { customClass: this.arrayClass }, Component);
+      const template = createTemplate({ isOpen: true, files: [] }, { customClass: arrayClass }, Component);
 
-      this.createTestParent = React.createFactory(template);
-      this.ParentComponent = this.createTestParent();
-      this.container = document.createElement('div');
-      this.instance = ReactDOM.render(this.ParentComponent, this.container);
-      this.receiver = this.instance.refs.receiver;
+      createTestParent = React.createFactory(template);
+      ParentComponent = createTestParent();
+      container = document.createElement('div');
+      instance = ReactDOM.render(ParentComponent, container);
+      receiver = instance.refs.receiver;
 
-      const receiver = ReactDOM.findDOMNode(this.receiver);
-      expect(receiver.className).toEqual(this.arrayClass.join(' '));
+      const receiverNode = ReactDOM.findDOMNode(receiver);
+      expect(receiverNode.className).toEqual(arrayClass.join(' '));
     });
   });
 });

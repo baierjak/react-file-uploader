@@ -14,141 +14,151 @@ const UploadManager = FileUploader.UploadManager;
 const uploadStatus = FileUploader.status;
 
 describe('UploadManager', () => {
+  const stringClass = 'receiver';
+  const arrayClass = ['react', 'receiver'];
+  const style = { display: 'block' };
+  const uploadPath = 'http://localhost:3000/api/upload';
+
+  const onUploadStart = jest.fn();
+  const onUploadProgress = jest.fn();
+  const onUploadEnd = jest.fn();
+
+  let children;
+  let instance;
+  let container;
+
   beforeEach(function setting() {
     global.document = jsdom();
     global.window = document.parentWindow;
 
-    this.stringClass = 'receiver';
-    this.arrayClass = ['react', 'receiver'];
-    this.style = { display: 'block' };
-    this.uploadPath = 'http://localhost:3000/api/upload';
-    this.onUploadStart = jest.fn();
-    this.onUploadProgress = jest.fn();
-    this.onUploadEnd = jest.fn();
+    children = <p>children</p>;
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
-    this.children = <p>children</p>;
-    this.container = document.createElement('div');
-    this.instance = ReactDOM.render(
+    instance = ReactDOM.render(
       <UploadManager
-        uploadUrl={this.uploadPath}
-        onUploadEnd={this.onUploadEnd}
+        uploadUrl={uploadPath}
+        onUploadEnd={onUploadEnd}
       >
-        {this.children}
+        {children}
       </UploadManager>,
-      this.container
+      container
     );
   });
 
   afterEach(function setting() {
-    this.container = null;
-    this.instance = null;
+    container = null;
+    instance = null;
   });
 
   describe('#render()', () => {
     it('should render ul element by default', function test() {
-      const node = ReactDOM.findDOMNode(this.instance);
+      const node = ReactDOM.findDOMNode(instance);
       expect(node).toEqual(jasmine.any(HTMLUListElement));
       expect(node.firstElementChild).toEqual(jasmine.any(HTMLParagraphElement));
     });
 
     it('should render wrapper element according to component props', function test() {
-      this.instance = ReactDOM.render(
+      instance = ReactDOM.render(
         <UploadManager
           component="div"
-          uploadUrl={this.uploadPath}
-          onUploadEnd={this.onUploadEnd}
+          uploadUrl={uploadPath}
+          onUploadEnd={onUploadEnd}
         >
-          {this.children}
+          {children}
         </UploadManager>,
-        this.container
+        container
       );
-      const node = ReactDOM.findDOMNode(this.instance);
+      const node = ReactDOM.findDOMNode(instance);
       expect(node).toEqual(jasmine.any(HTMLDivElement));
     });
 
     it('should render a wrapper with customClass in string', function test() {
-      this.instance = ReactDOM.render(
+      instance = ReactDOM.render(
         <UploadManager
           component="div"
-          customClass={this.stringClass}
-          style={this.style}
-          uploadUrl={this.uploadPath}
-          onUploadEnd={this.onUploadEnd}
+          customClass={stringClass}
+          style={style}
+          uploadUrl={uploadPath}
+          onUploadEnd={onUploadEnd}
         >
-          {this.children}
+          {children}
         </UploadManager>,
-        this.container
+        container
       );
-      const node = ReactDOM.findDOMNode(this.instance);
-      expect(node.className).toEqual(this.stringClass);
+      const node = ReactDOM.findDOMNode(instance);
+      expect(node.className).toEqual(stringClass);
     });
 
     it('should render a wrapper with customClass in array', function test() {
-      this.instance = ReactDOM.render(
+      instance = ReactDOM.render(
         <UploadManager
           component="div"
-          customClass={this.arrayClass}
-          style={this.style}
-          uploadUrl={this.uploadPath}
-          onUploadEnd={this.onUploadEnd}
+          customClass={arrayClass}
+          style={style}
+          uploadUrl={uploadPath}
+          onUploadEnd={onUploadEnd}
         >
-          {this.children}
+          {children}
         </UploadManager>,
-        this.container
+        container
       );
-      const node = ReactDOM.findDOMNode(this.instance);
-      expect(node.className).toEqual(this.arrayClass.join(' '));
+      const node = ReactDOM.findDOMNode(instance);
+      expect(node.className).toEqual(arrayClass.join(' '));
     });
   });
 
   describe('#uploadErrorHandler()', () => {
+    const err = new Error('not found');
+    const errorResponse = { body: { success: false, errors: { message: 'not found' } } };
+    const successResponse = { body: { success: true } };
+    let errorHandler;
+
     beforeEach(function setting() {
-      this.err = new Error('not found');
-      this.errorResponse = { body: { success: false, errors: { message: 'not found' } } };
-      this.successResponse = { body: { success: true } };
-      this.errorHandler = this.instance.props.uploadErrorHandler;
+      errorHandler = instance.props.uploadErrorHandler;
     });
 
     it('should return an object contains key of `error` and `result`', function test() {
-      const result = this.errorHandler(null, this.successResponse);
+      const result = errorHandler(null, successResponse);
       expect(result.error).toBeNull();
-      expect(result.result).toEqual(this.successResponse.body);
+      expect(result.result).toEqual(successResponse.body);
     });
 
     it('should return an object with key of `error` with value equals to the first argument if it is not empty', function test() {
-      const result = this.errorHandler(this.err, this.successResponse);
-      expect(result.error).toEqual(this.err.message);
-      expect(result.result).toEqual(this.successResponse.body);
+      const result = errorHandler(err, successResponse);
+      expect(result.error).toEqual(err.message);
+      expect(result.result).toEqual(successResponse.body);
     });
 
     it('should return an object with key of `error` with value equals to the value of `body.error` of the second argument if it is not empty', function test() {
-      const result = this.errorHandler(null, this.errorResponse);
-      expect(result.error).toEqual(this.errorResponse.body.errors);
-      delete this.errorResponse.body.errors;
-      expect(result.result).toEqual(this.errorResponse.body);
+      const result = errorHandler(null, errorResponse);
+      expect(result.error).toEqual(errorResponse.body.errors);
+      delete errorResponse.body.errors;
+      expect(result.result).toEqual(errorResponse.body);
     });
   });
 
   describe('#upload()', () => {
+    let successResponse;
+
     beforeEach(function setting() {
       nock('http://localhost:3000')
         .filteringRequestBody(() => '*')
         .post('/api/upload', '*')
-        .reply(200, this.successResponse);
+        .reply(200, successResponse);
 
-      this.instance = ReactDOM.render(
+      instance = ReactDOM.render(
         <UploadManager
-          uploadUrl={this.uploadPath}
-          onUploadStart={this.onUploadStart}
-          onUploadProgress={this.onUploadProgress}
-          onUploadEnd={this.onUploadEnd}
+          uploadUrl={uploadPath}
+          onUploadStart={onUploadStart}
+          onUploadProgress={onUploadProgress}
+          onUploadEnd={onUploadEnd}
         >
-          {this.children}
+          {children}
         </UploadManager>,
-        this.container
+        container
       );
-      this.errorResponse = { success: false, errors: { message: 'not found' } };
-      this.successResponse = { success: true };
+      successResponse = { success: true };
     });
 
     afterEach(() => {
@@ -157,8 +167,8 @@ describe('UploadManager', () => {
     });
 
     it('should call onUploadStart prop functions if it is given', function test() {
-      this.instance.upload(this.instance.props.uploadUrl, {});
-      expect(this.onUploadStart).toBeCalledWith({ status: uploadStatus.UPLOADING });
+      instance.upload(instance.props.uploadUrl, {});
+      expect(onUploadStart).toBeCalledWith({ status: uploadStatus.UPLOADING });
     });
   });
 });
